@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 	log "unsplash-downloader/pkg/qlogger"
 )
 
@@ -171,15 +172,18 @@ func DownloadFile(URL, fileName string) error {
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
+		Timeout: 30 * time.Second,
 	}
 	//Get the response bytes from the url
 	response, err := client.Get(URL)
+
+	<-downloadTokens
+
 	if err != nil {
 		log.Println(fileName, " request error: ", err)
 		return err
 	}
 	defer response.Body.Close()
-	<-downloadTokens
 
 	if response.StatusCode != 200 {
 		log.Println(fileName, " Received non 200 response code: ",
