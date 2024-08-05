@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -43,7 +42,7 @@ func GetEditorialPhotos(key string, page int) (Photos, error) {
 
 	if res.StatusCode == 200 {
 		// Parse links
-		body, _ := ioutil.ReadAll(res.Body)
+		body, _ := io.ReadAll(res.Body)
 		// log.Printf("%#v", string(body))
 		photos, err := UnmarshalPhotos(body)
 		log.Println("photos: ", len(photos), "err: ", err)
@@ -91,7 +90,7 @@ func GetTopicsPhotos(key string, topicId string, page int) (Photos, error) {
 
 	if res.StatusCode == 200 {
 		// Parse links
-		body, _ := ioutil.ReadAll(res.Body)
+		body, _ := io.ReadAll(res.Body)
 		// log.Printf("%#v", string(body))
 		photos, err := UnmarshalPhotos(body)
 		log.Println("photos: ", len(photos), "err: ", err)
@@ -136,7 +135,7 @@ func GetRandomPhoto(key string) (Photos, error) {
 
 	if res.StatusCode == 200 {
 		// Parse links
-		body, _ := ioutil.ReadAll(res.Body)
+		body, _ := io.ReadAll(res.Body)
 		// log.Printf("%#v", string(body))
 		photos, err := UnmarshalPhotos(body)
 		log.Println("photos: ", len(photos), "err: ", err)
@@ -159,7 +158,7 @@ func GetRandomPhoto(key string) (Photos, error) {
 
 func DownloadFile(URL, fileName string) error {
 	name := fileName + ".jpeg"
-	_, err := os.Stat("/sharedFolder/photos/" + name)
+	_, err := os.Stat(downloadFolder + "/" + name)
 
 	if err == nil {
 		// File exist
@@ -194,7 +193,7 @@ func DownloadFile(URL, fileName string) error {
 	log.Println("Downloaded: ", fileName)
 	//Create a empty file
 	// name := strconv.Itoa(int(time.Now().Unix())) + "_" + fileName + ".jpeg"
-	file, err := os.Create("/sharedFolder/photos/" + name)
+	file, err := os.Create(downloadFolder + "/" + name)
 	// file, err := os.Create("./" + name)
 	if err != nil {
 		log.Println("Fail create file ", fileName)

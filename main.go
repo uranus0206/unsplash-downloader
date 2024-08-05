@@ -10,6 +10,7 @@ import (
 )
 
 var AccessKey string
+var downloadFolder string
 var wg sync.WaitGroup
 var downloadTokens = make(chan struct{}, 10)
 
@@ -35,10 +36,15 @@ type PhotoLink struct {
 
 func main() {
 	flag.StringVar(&AccessKey, "c", "", "Client Access Key.")
+	flag.StringVar(&downloadFolder, "f", "", "Folder to store images.")
 	flag.Parse()
 
 	if AccessKey == "" {
 		log.Panicln("Missing access key.")
+	}
+
+	if downloadFolder == "" {
+		log.Panicln("Missing downloadFolder.")
 	}
 
 	dbmanager.InitWithPath("unsplash.db").CreateTable()
