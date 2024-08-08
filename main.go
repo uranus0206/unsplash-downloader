@@ -9,13 +9,19 @@ import (
 	log "unsplash-downloader/pkg/qlogger"
 )
 
-var AccessKey string
-var downloadFolder string
-var wg sync.WaitGroup
-var downloadTokens = make(chan struct{}, 10)
+var (
+	AccessKey             string
+	downloadFolder        string
+	checkFolder           string
+	shouldCheckHiddenFile bool
+	wg                    sync.WaitGroup
+	downloadTokens        = make(chan struct{}, 10)
+)
 
-var topics dbmanager.DbTopics
-var editorial dbmanager.DbEditorial
+var (
+	topics    dbmanager.DbTopics
+	editorial dbmanager.DbEditorial
+)
 
 var downloadByTopics bool
 
@@ -37,6 +43,7 @@ type PhotoLink struct {
 func main() {
 	flag.StringVar(&AccessKey, "c", "", "Client Access Key.")
 	flag.StringVar(&downloadFolder, "f", "", "Folder to store images.")
+	flag.StringVar(&checkFolder, "x", "", "checkingFolder, 'y' or 'Y' for enable checking. Omit for skip checking.")
 	flag.Parse()
 
 	if AccessKey == "" {
@@ -45,6 +52,12 @@ func main() {
 
 	if downloadFolder == "" {
 		log.Panicln("Missing downloadFolder.")
+	}
+
+	if checkFolder == "y" || checkFolder == "Y" {
+		shouldCheckHiddenFile = true
+	} else {
+		shouldCheckHiddenFile = false
 	}
 
 	dbmanager.InitWithPath("unsplash.db").CreateTable()
@@ -92,7 +105,6 @@ func main() {
 			photos, err = GetTopicsPhotos(AccessKey,
 				topics.TopicsId,
 				int(topics.PageOffset))
-
 			if err != nil {
 				time.Sleep(30 * time.Second)
 				continue
@@ -119,7 +131,6 @@ func main() {
 			// Crawl Editorial photos
 			photos, err = GetEditorialPhotos(AccessKey,
 				int(editorial.PageOffset))
-
 			if err != nil {
 				time.Sleep(30 * time.Second)
 				continue

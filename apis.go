@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 	log "unsplash-downloader/pkg/qlogger"
 )
@@ -31,7 +32,6 @@ func GetEditorialPhotos(key string, page int) (Photos, error) {
 	log.Println(req.URL.String(), " , query: ", req.URL.Query())
 
 	res, err := client.Do(req)
-
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,6 @@ func GetTopicsPhotos(key string, topicId string, page int) (Photos, error) {
 	log.Println(req.URL.String(), " , query: ", req.URL.Query())
 
 	res, err := client.Do(req)
-
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +123,6 @@ func GetRandomPhoto(key string) (Photos, error) {
 
 	// res, err := http.DefaultClient.Do(req)
 	res, err := client.Get(randomApi)
-
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +155,30 @@ func GetRandomPhoto(key string) (Photos, error) {
 }
 
 func DownloadFile(URL, fileName string) error {
+	if shouldCheckHiddenFile {
+		_, err := os.Stat(downloadFolder + "/.qnap")
+		if err != nil {
+			return err
+		}
+	}
+
+	fileName = strings.ReplaceAll(fileName, ".", "_")
+	fileName = strings.ReplaceAll(fileName, "-", "__")
+	fileName = strings.ReplaceAll(fileName, "&", "___")
+	fileName = strings.ReplaceAll(fileName, "0", "____")
+	fileName = strings.ReplaceAll(fileName, "?", "_____")
+	fileName = strings.ReplaceAll(fileName, "&", "______")
+	fileName = strings.ReplaceAll(fileName, "(", "_______")
+	fileName = strings.ReplaceAll(fileName, ")", "________")
+	fileName = strings.ReplaceAll(fileName, "$", "_________")
+	fileName = strings.ReplaceAll(fileName, "#", "__________")
+	fileName = strings.ReplaceAll(fileName, "@", "___________")
+	fileName = strings.ReplaceAll(fileName, "!", "____________")
+	fileName = strings.ReplaceAll(fileName, "+", "_____________")
+	fileName = strings.ReplaceAll(fileName, "*", "______________")
+	fileName = strings.ReplaceAll(fileName, "%", "_______________")
+	fileName = strings.ReplaceAll(fileName, "^", "________________")
+
 	name := fileName + ".jpeg"
 	_, err := os.Stat(downloadFolder + "/" + name)
 
@@ -173,7 +195,7 @@ func DownloadFile(URL, fileName string) error {
 		},
 		Timeout: 30 * time.Second,
 	}
-	//Get the response bytes from the url
+	// Get the response bytes from the url
 	response, err := client.Get(URL)
 
 	<-downloadTokens
@@ -191,7 +213,15 @@ func DownloadFile(URL, fileName string) error {
 	}
 
 	log.Println("Downloaded: ", fileName)
-	//Create a empty file
+
+	if shouldCheckHiddenFile {
+		_, err := os.Stat(downloadFolder + "/.qnap")
+		if err != nil {
+			return err
+		}
+	}
+
+	// Create a empty file
 	// name := strconv.Itoa(int(time.Now().Unix())) + "_" + fileName + ".jpeg"
 	file, err := os.Create(downloadFolder + "/" + name)
 	// file, err := os.Create("./" + name)
@@ -201,7 +231,7 @@ func DownloadFile(URL, fileName string) error {
 	}
 	defer file.Close()
 
-	//Write the bytes to the file
+	// Write the bytes to the file
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
 		log.Println("Fail write file ", fileName)
